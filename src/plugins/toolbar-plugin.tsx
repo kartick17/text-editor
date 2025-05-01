@@ -12,63 +12,48 @@ import {
   FORMAT_ELEMENT_COMMAND,
   $getSelection,
   $isRangeSelection,
-  $createParagraphNode,
   $getNodeByKey,
   COMMAND_PRIORITY_LOW,
   LexicalEditor,
   RangeSelection,
-  ElementNode,
   LexicalNode,
 } from 'lexical'
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
+import { $isParentElementRTL, $isAtNodeEnd } from '@lexical/selection'
 import {
-  $isParentElementRTL,
-  $wrapNodes,
-  $isAtNodeEnd,
-} from '@lexical/selection'
-import { $getNearestNodeOfType, mergeRegister } from '@lexical/utils'
-import {
-  INSERT_ORDERED_LIST_COMMAND,
-  INSERT_UNORDERED_LIST_COMMAND,
-  REMOVE_LIST_COMMAND,
-  $isListNode,
-  ListNode,
-} from '@lexical/list'
+  $getNearestNodeOfType,
+  $insertNodeToNearestRoot,
+  mergeRegister,
+} from '@lexical/utils'
+import { $isListNode, ListNode } from '@lexical/list'
 import { createPortal } from 'react-dom'
+import { $isHeadingNode } from '@lexical/rich-text'
 import {
-  $createHeadingNode,
-  $createQuoteNode,
-  $isHeadingNode,
-} from '@lexical/rich-text'
-import {
-  $createCodeNode,
   $isCodeNode,
   getDefaultCodeLanguage,
   getCodeLanguages,
 } from '@lexical/code'
-
-const supportedBlockTypes = new Set([
-  'paragraph',
-  'quote',
-  'code',
-  'h1',
-  'h2',
-  'ul',
-  'ol',
-])
-
-const blockTypeToBlockName: Record<string, string> = {
-  code: 'Code Block',
-  h1: 'Large Heading',
-  h2: 'Small Heading',
-  h3: 'Heading',
-  h4: 'Heading',
-  h5: 'Heading',
-  ol: 'Numbered List',
-  paragraph: 'Normal',
-  quote: 'Quote',
-  ul: 'Bulleted List',
-}
+import { BlockOptionsDropdownList } from '@/components/block-options-dropdown'
+import {
+  blockTypeToBlockName,
+  supportedBlockTypes,
+} from '@/constants/blockOptions'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { $createEquationNode } from '@/components/editor/nodes/equation-node'
+import { ActivityIcon as Function } from 'lucide-react'
+import KatexRenderer from '@/components/editor/ui/katex-renderer'
+import { ErrorBoundary } from 'react-error-boundary'
+import { Label } from '@radix-ui/react-label'
+import { Textarea } from '@/components/ui/textarea'
+// import { supportedInsertTypes } from '@/constants/insertOptions'
+// import { InsertOptionsDropdownList } from '@/components/insert-options-dropdown'
 
 function Divider() {
   return <div className='divider' />
@@ -263,131 +248,6 @@ function Select({ onChange, className, options, value }: SelectProps) {
   )
 }
 
-interface BlockOptionsDropdownListProps {
-  editor: LexicalEditor
-  blockType: string
-  toolbarRef: React.RefObject<HTMLDivElement>
-  setShowBlockOptionsDropDown: (show: boolean) => void
-}
-
-function BlockOptionsDropdownList({
-  editor,
-  blockType,
-  toolbarRef,
-  setShowBlockOptionsDropDown,
-}: BlockOptionsDropdownListProps) {
-  const dropDownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const toolbar = toolbarRef.current
-    const dropDown = dropDownRef.current
-    if (toolbar && dropDown) {
-      const { top, left } = toolbar.getBoundingClientRect()
-      dropDown.style.top = `${top + 40}px`
-      dropDown.style.left = `${left}px`
-    }
-  }, [toolbarRef])
-
-  useEffect(() => {
-    const dropDown = dropDownRef.current
-    const toolbar = toolbarRef.current
-    if (dropDown && toolbar) {
-      const handleClick = (event: MouseEvent) => {
-        if (
-          !dropDown.contains(event.target as Node) &&
-          !toolbar.contains(event.target as Node)
-        ) {
-          setShowBlockOptionsDropDown(false)
-        }
-      }
-      document.addEventListener('click', handleClick)
-      return () => {
-        document.removeEventListener('click', handleClick)
-      }
-    }
-  }, [setShowBlockOptionsDropDown, toolbarRef])
-
-  const formatBlock = (nodeCreator: () => ElementNode) => {
-    editor.update(() => {
-      const selection = $getSelection()
-      if ($isRangeSelection(selection)) {
-        $wrapNodes(selection, nodeCreator)
-      }
-    })
-    setShowBlockOptionsDropDown(false)
-  }
-
-  const formatList = (insertCommand: any, type: string) => {
-    if (blockType !== type) {
-      editor.dispatchCommand(insertCommand, undefined)
-    } else {
-      editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)
-    }
-    setShowBlockOptionsDropDown(false)
-  }
-
-  return (
-    <div className='dropdown' ref={dropDownRef}>
-      <button
-        className='item'
-        onClick={() => formatBlock(() => $createParagraphNode())}
-      >
-        <span className='icon paragraph' />
-        <span className='text'>Normal</span>
-        {blockType === 'paragraph' && <span className='active' />}
-      </button>
-      <button
-        className='item'
-        onClick={() => formatBlock(() => $createHeadingNode('h1'))}
-      >
-        <span className='icon large-heading' />
-        <span className='text'>Large Heading</span>
-        {blockType === 'h1' && <span className='active' />}
-      </button>
-      <button
-        className='item'
-        onClick={() => formatBlock(() => $createHeadingNode('h2'))}
-      >
-        <span className='icon small-heading' />
-        <span className='text'>Small Heading</span>
-        {blockType === 'h2' && <span className='active' />}
-      </button>
-      <button
-        className='item'
-        onClick={() => formatList(INSERT_UNORDERED_LIST_COMMAND, 'ul')}
-      >
-        <span className='icon bullet-list' />
-        <span className='text'>Bullet List</span>
-        {blockType === 'ul' && <span className='active' />}
-      </button>
-      <button
-        className='item'
-        onClick={() => formatList(INSERT_ORDERED_LIST_COMMAND, 'ol')}
-      >
-        <span className='icon numbered-list' />
-        <span className='text'>Numbered List</span>
-        {blockType === 'ol' && <span className='active' />}
-      </button>
-      <button
-        className='item'
-        onClick={() => formatBlock(() => $createQuoteNode())}
-      >
-        <span className='icon quote' />
-        <span className='text'>Quote</span>
-        {blockType === 'quote' && <span className='active' />}
-      </button>
-      <button
-        className='item'
-        onClick={() => formatBlock(() => $createCodeNode())}
-      >
-        <span className='icon code' />
-        <span className='text'>Code Block</span>
-        {blockType === 'code' && <span className='active' />}
-      </button>
-    </div>
-  )
-}
-
 export default function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -400,13 +260,17 @@ export default function ToolbarPlugin() {
   )
   const [showBlockOptionsDropDown, setShowBlockOptionsDropDown] =
     useState(false)
+  // const [showInsertOptionsDropdown, setShowInsertOptionsDropdown] =
+  //   useState(false)
   const [codeLanguage, setCodeLanguage] = useState<string>('')
   const [isRTL, setIsRTL] = useState(false)
   const [isLink, setIsLink] = useState(false)
   const [isBold, setIsBold] = useState(false)
+  const [isEquation, setIsEquation] = useState('')
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
+  const [isMathDialogOpen, setIsMathDialogOpen] = useState(false)
   const [isCode, setIsCode] = useState(false)
 
   const mergeRegistrations = (...registrations: (() => void)[]) => {
@@ -518,6 +382,17 @@ export default function ToolbarPlugin() {
     }
   }, [editor, isLink])
 
+  const insertMath = useCallback(() => {
+    if (isEquation.trim() !== '') {
+      editor.update(() => {
+        const node = $createEquationNode(isEquation)
+        $insertNodeToNearestRoot(node)
+      })
+      setIsEquation('')
+      setIsMathDialogOpen(false)
+    }
+  }, [editor, isEquation])
+
   return (
     <div className='toolbar' ref={toolbarRef}>
       <button
@@ -537,7 +412,6 @@ export default function ToolbarPlugin() {
         <i className='format redo' />
       </button>
       <Divider />
-
       {supportedBlockTypes.has(blockType) && (
         <>
           <button
@@ -545,7 +419,7 @@ export default function ToolbarPlugin() {
             onClick={() => setShowBlockOptionsDropDown((prev) => !prev)}
             aria-label='Formatting Options'
           >
-            <span className={'icon block-type ' + blockType} />
+            <span className={`icon block-type ${blockType}`} />
             <span className='text'>{blockTypeToBlockName[blockType]}</span>
             <i className='chevron-down' />
           </button>
@@ -556,14 +430,14 @@ export default function ToolbarPlugin() {
               <BlockOptionsDropdownList
                 editor={editor}
                 blockType={blockType}
-                toolbarRef={toolbarRef}
+                toolbarRef={toolbarRef as React.RefObject<HTMLDivElement>}
                 setShowBlockOptionsDropDown={setShowBlockOptionsDropDown}
               />,
               document.body
             )}
-          <Divider />
         </>
       )}
+      <Divider />
 
       {blockType === 'code' ? (
         <>
@@ -627,6 +501,51 @@ export default function ToolbarPlugin() {
           </button>
           {isLink &&
             createPortal(<FloatingLinkEditor editor={editor} />, document.body)}
+          <Divider />
+
+          <Dialog open={isMathDialogOpen} onOpenChange={setIsMathDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant='ghost' size='icon' title='Insert Math Equation'>
+                <Function className='h-4 w-4' />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Insert Math Equation</DialogTitle>
+              </DialogHeader>
+              <div className='grid gap-4 py-4'>
+                <div className='grid gap-2'>
+                  <Label htmlFor='math-equation'>Equation</Label>
+                  <Textarea
+                    id='math-equation'
+                    value={isEquation}
+                    onChange={(e) => setIsEquation(e.target.value)}
+                    placeholder=''
+                    rows={4}
+                  />
+                </div>
+                {isEquation && (
+                  <div className='p-4 bg-gray-50 rounded-md'>
+                    <p className='text-sm font-medium mb-2'>Preview:</p>
+                    <ErrorBoundary
+                      onError={(e) => editor._onError(e)}
+                      fallback={null}
+                    >
+                      <KatexRenderer
+                        equation={isEquation}
+                        inline={false}
+                        onDoubleClick={() => {}}
+                      />
+                    </ErrorBoundary>
+                  </div>
+                )}
+              </div>
+              <div className='flex justify-end'>
+                <Button onClick={insertMath}>Insert</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Divider />
           <button
             onClick={() =>

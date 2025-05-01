@@ -18,13 +18,14 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin'
 import { TRANSFORMERS } from '@lexical/markdown'
 
-// import theme from '@/themes/themes'
+import theme from '@/themes/themes'
 import CodeHighlightPlugin from '@/plugins/code-highlight-plugin'
 import ToolbarPlugin from '@/plugins/toolbar-plugin'
 import { AutoLinkPlugin } from '@lexical/react/LexicalAutoLinkPlugin'
 import ListMaxIndentLevelPlugin from '@/plugins/list-max-indent-level-plugin'
 import TreeViewPlugin from '@/plugins/tree-view-plugin'
 import { MATCHERS } from '@/plugins/auto-link-plugin'
+import { EquationNode } from './editor/nodes/equation-node'
 
 function Placeholder(): JSX.Element {
   return <div className='editor-placeholder'>Write something...</div>
@@ -32,7 +33,7 @@ function Placeholder(): JSX.Element {
 
 const editorConfig: InitialConfigType = {
   namespace: 'MyEditor', // Add this line with a unique string
-  // theme,
+  theme,
   onError(error: Error) {
     console.error('Lexical Error:', error)
     throw error
@@ -49,6 +50,7 @@ const editorConfig: InitialConfigType = {
     TableRowNode,
     AutoLinkNode,
     LinkNode,
+    EquationNode,
   ],
 }
 
@@ -61,7 +63,7 @@ export default function Editor(): JSX.Element {
           <RichTextPlugin
             contentEditable={<ContentEditable className='editor-input' />}
             placeholder={<Placeholder />}
-            ErrorBoundary={LexicalErrorBoundary} // TODO: fix
+            ErrorBoundary={LexicalErrorBoundary}
           />
           <HistoryPlugin />
           <TreeViewPlugin />
