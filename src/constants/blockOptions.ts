@@ -15,7 +15,7 @@ export const blockTypeToBlockName: Record<string, string> = {
   h3: 'Heading',
   h4: 'Heading',
   h5: 'Heading',
-  ol: 'Numbered List',
+  ol: 'Number List',
   paragraph: 'Normal',
   quote: 'Quote',
   ul: 'Bulleted List',

@@ -15,12 +15,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   background: var(--background);
@@ -291,12 +291,14 @@ h1 {
   margin-left: 16px;
 }
 
-.editor-listitem {
-  margin: 8px 32px 8px 32px;
-}
+/* .editor-listitem {
+  margin: 8px 32px 8px 32px
+   
+   types: disc; 
+} */
 
 .editor-nested-listitem {
-  list-style-type: none;
+  list-style-type: disc;
 }
 
 pre::-webkit-scrollbar {

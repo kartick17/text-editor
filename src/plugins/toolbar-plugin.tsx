@@ -525,7 +525,7 @@ export default function ToolbarPlugin() {
                   />
                 </div>
                 {isEquation && (
-                  <div className='p-4 bg-gray-50 rounded-md'>
+                  <div className='p-4 bg-gray-100 rounded-md'>
                     <p className='text-sm font-medium mb-2'>Preview:</p>
                     <ErrorBoundary
                       onError={(e) => editor._onError(e)}

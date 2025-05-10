@@ -51,14 +51,14 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
   }
 
   constructor(equation: string, inline?: boolean, key?: NodeKey) {
-    console.log('equation', equation)
-    console.log('inline', inline)
+    // console.log('equation', equation)
+    // console.log('inline', inline)
 
     super(key)
     this.__equation = equation
     this.__inline = inline ?? false
 
-    console.log('this.__inline', this.__equation)
+    // console.log('this.__inline', this.__equation)
   }
 
   static importJSON(serializedNode: SerializedEquationNode): EquationNode {
