@@ -18,6 +18,7 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { $isEquationNode } from './equation-node'
 import EquationEditor from '../ui/equation-editor'
 import KatexRenderer from '../ui/katex-renderer'
+import { useEditor } from '../contexts/editor-context'
 
 type EquationComponentProps = {
   equation: string
@@ -35,6 +36,9 @@ export default function EquationComponent({
   const [equationValue, setEquationValue] = useState(equation)
   const [showEquationEditor, setShowEquationEditor] = useState<boolean>(false)
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null)
+
+  const { setIsMathKeyboardOpen, setMathExpression, setEditingMathNodeKey } =
+    useEditor()
 
   const onHide = useCallback(
     (restoreSelection?: boolean) => {
@@ -107,6 +111,12 @@ export default function EquationComponent({
     }
   }, [editor, nodeKey, onHide, showEquationEditor, isEditable])
 
+  const handleDoubleClick = () => {
+    setIsMathKeyboardOpen(true)
+    setEditingMathNodeKey(nodeKey) // Track the node being edited
+    setMathExpression(equationValue)
+  }
+
   return (
     <>
       {showEquationEditor && isEditable ? (
@@ -121,11 +131,7 @@ export default function EquationComponent({
           <KatexRenderer
             equation={equationValue}
             inline={inline}
-            onDoubleClick={() => {
-              if (isEditable) {
-                setShowEquationEditor(true)
-              }
-            }}
+            onDoubleClick={handleDoubleClick}
           />
         </ErrorBoundary>
       )}

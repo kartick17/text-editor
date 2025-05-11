@@ -52,6 +52,7 @@ import KatexRenderer from '@/components/editor/ui/katex-renderer'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Label } from '@radix-ui/react-label'
 import { Textarea } from '@/components/ui/textarea'
+import MathKeyboard from '@/components/editor/ui/math-keyboard'
 // import { supportedInsertTypes } from '@/constants/insertOptions'
 // import { InsertOptionsDropdownList } from '@/components/insert-options-dropdown'
 
@@ -266,8 +267,8 @@ export default function ToolbarPlugin() {
   const [isRTL, setIsRTL] = useState(false)
   const [isLink, setIsLink] = useState(false)
   const [isBold, setIsBold] = useState(false)
-  const [isEquation, setIsEquation] = useState('')
   const [isItalic, setIsItalic] = useState(false)
+  const [isEquation, setIsEquation] = useState('')
   const [isUnderline, setIsUnderline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
   const [isMathDialogOpen, setIsMathDialogOpen] = useState(false)
@@ -546,6 +547,7 @@ export default function ToolbarPlugin() {
             </DialogContent>
           </Dialog>
 
+          <MathKeyboard />
           <Divider />
           <button
             onClick={() =>
